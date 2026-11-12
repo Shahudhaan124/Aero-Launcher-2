@@ -11,22 +11,23 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 
 class LauncherActivity : ComponentActivity() {
+    private lateinit var appRepository: AppRepository
+
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
+        
+        appRepository = AppRepository(this)
+        
         setContent {
             MaterialTheme {
                 Surface(modifier = Modifier.fillMaxSize(), color = Color.Transparent) {
-                    // UI placeholder so it compiles cleanly
-                    androidx.compose.material3.Text(
-                        text = "Launcher Active", 
-                        color = Color.White,
-                        modifier = Modifier.fillMaxSize()
-                    )
+                    PremiumHomeScreen(appRepository = appRepository)
                 }
             }
         }
     }
+    
     @Deprecated("Deprecated in Java")
     override fun onBackPressed() {}
 }
