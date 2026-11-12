@@ -13,7 +13,10 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
@@ -29,17 +32,18 @@ import androidx.core.graphics.drawable.toBitmap
 
 @Composable
 fun PremiumHomeScreen(appRepository: AppRepository) {
-    var categorizedApps by remember { mutableStateOf>>(emptyMap()) }
-    var expandedFolder by remember { mutableStateOf<String?>(null) }
+    // Using explicit .value instead of 'by' delegates to prevent compiler ambiguity
+    val categorizedApps = remember { mutableStateOf>>(emptyMap()) }
+    val expandedFolder = remember { mutableStateOf<String?>(null) }
     
     LaunchedEffect(Unit) {
-        categorizedApps = appRepository.getInstalledApps()
+        categorizedApps.value = appRepository.getInstalledApps()
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
         Box(modifier = Modifier
             .fillMaxSize()
-            .blur(if (expandedFolder != null) 24.dp else 0.dp)
+            .blur(if (expandedFolder.value != null) 24.dp else 0.dp)
         ) {
             LazyVerticalGrid(
                 columns = GridCells.Fixed(2),
@@ -49,12 +53,14 @@ fun PremiumHomeScreen(appRepository: AppRepository) {
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                items(categorizedApps.keys.toList()) { category ->
-                    val appsInFolder = categorizedApps[category] ?: emptyList()
+                // Explicitly typing the list iteration for the compiler
+                val categories: List<String> = categorizedApps.value.keys.toList()
+                items(categories) { category ->
+                    val appsInFolder = categorizedApps.value[category] ?: emptyList()
                     FolderCard(
                         categoryName = category,
                         apps = appsInFolder,
-                        onClick = { expandedFolder = category },
+                        onClick = { expandedFolder.value = category },
                         onAppClick = { packageName -> appRepository.launchApp(packageName) }
                     )
                 }
@@ -74,7 +80,8 @@ fun PremiumHomeScreen(appRepository: AppRepository) {
                     horizontalArrangement = Arrangement.SpaceEvenly,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    categorizedApps.values.flatten().take(4).forEach { app ->
+                    val dockApps: List<AppInfo> = categorizedApps.value.values.flatten().take(4)
+                    dockApps.forEach { app ->
                         DockIconItem(app = app, onClick = { appRepository.launchApp(app.packageName) })
                     }
                 }
@@ -82,7 +89,7 @@ fun PremiumHomeScreen(appRepository: AppRepository) {
         }
 
         AnimatedVisibility(
-            visible = expandedFolder != null,
+            visible = expandedFolder.value != null,
             enter = fadeIn(),
             exit = fadeOut()
         ) {
@@ -93,11 +100,11 @@ fun PremiumHomeScreen(appRepository: AppRepository) {
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = null
-                    ) { expandedFolder = null },
+                    ) { expandedFolder.value = null },
                 contentAlignment = Alignment.Center
             ) {
-                expandedFolder?.let { category ->
-                    val apps = categorizedApps[category] ?: emptyList()
+                expandedFolder.value?.let { category ->
+                    val apps: List<AppInfo> = categorizedApps.value[category] ?: emptyList()
                     
                     Column(
                         modifier = Modifier
@@ -121,7 +128,7 @@ fun PremiumHomeScreen(appRepository: AppRepository) {
                             items(apps) { app ->
                                 AppIconItem(app = app, textColor = Color.Black, onClick = {
                                     appRepository.launchApp(app.packageName)
-                                    expandedFolder = null
+                                    expandedFolder.value = null
                                 })
                             }
                         }
