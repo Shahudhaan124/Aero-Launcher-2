@@ -32,7 +32,7 @@ import androidx.core.graphics.drawable.toBitmap
 
 @Composable
 fun PremiumHomeScreen(appRepository: AppRepository) {
-    // Using explicit .value instead of 'by' delegates to prevent compiler ambiguity
+    // Explicit .value states to prevent missing delegate import errors
     val categorizedApps = remember { mutableStateOf>>(emptyMap()) }
     val expandedFolder = remember { mutableStateOf<String?>(null) }
     
@@ -53,8 +53,8 @@ fun PremiumHomeScreen(appRepository: AppRepository) {
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // Explicitly typing the list iteration for the compiler
-                val categories: List<String> = categorizedApps.value.keys.toList()
+                // Statically typing the list for the items() function
+                val categories = categorizedApps.value.keys.toList()
                 items(categories) { category ->
                     val appsInFolder = categorizedApps.value[category] ?: emptyList()
                     FolderCard(
@@ -80,7 +80,7 @@ fun PremiumHomeScreen(appRepository: AppRepository) {
                     horizontalArrangement = Arrangement.SpaceEvenly,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    val dockApps: List<AppInfo> = categorizedApps.value.values.flatten().take(4)
+                    val dockApps = categorizedApps.value.values.flatten().take(4)
                     dockApps.forEach { app ->
                         DockIconItem(app = app, onClick = { appRepository.launchApp(app.packageName) })
                     }
@@ -104,7 +104,7 @@ fun PremiumHomeScreen(appRepository: AppRepository) {
                 contentAlignment = Alignment.Center
             ) {
                 expandedFolder.value?.let { category ->
-                    val apps: List<AppInfo> = categorizedApps.value[category] ?: emptyList()
+                    val apps = categorizedApps.value[category] ?: emptyList()
                     
                     Column(
                         modifier = Modifier
